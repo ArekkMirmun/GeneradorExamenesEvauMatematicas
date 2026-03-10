@@ -5,16 +5,16 @@
 </p>
 
 <p align="center">
-  <a href="https://arekkmirmun.github.io/GeneradorExamenesEvauMatematicas/">
+  <a href="https://arekkmirmun.github.io/GeneradorExamenesEvau/">
     <img 
-      src="https://raw.githubusercontent.com/ArekkMirmun/GeneradorExamenesEvauMatematicas/refs/heads/main/webSS.png" 
+      src="https://raw.githubusercontent.com/ArekkMirmun/GeneradorExamenesEvau/refs/heads/main/webSS.png" 
       alt="Vista previa del generador" 
       width="900">
   </a>
 </p>
 
 <p align="center">
-  <a href="https://arekkmirmun.github.io/GeneradorExamenesEvauMatematicas/">
+  <a href="https://arekkmirmun.github.io/GeneradorExamenesEvau/">
     <img 
       src="https://img.shields.io/badge/ABRIR%20GENERADOR-EXÁMENES%20EVAU%20-008080?style=for-the-badge&logo=github&logoColor=white" 
       alt="Ir al generador online" />
@@ -87,7 +87,7 @@ dist/                                    # Ejecutable empaquetado
 
 Descarga el archivo ZIP desde la ultima release:
 
-**[⬇ Descargar GeneradorExamenes.zip](https://github.com/ArekkMirmun/GeneradorExamenesEvauMatematicas/releases/latest)**
+**[⬇ Descargar GeneradorExamenes.zip](https://github.com/ArekkMirmun/GeneradorExamenesEvau/releases/latest)**
 
 El ZIP contiene el ejecutable y la carpeta `ejercicios/` lista para usar. Descomprime y ejecuta `GeneradorExamenes_Publica.exe`.
 

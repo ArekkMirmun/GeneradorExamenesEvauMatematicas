@@ -3,6 +3,6 @@ import tailwind from "@astrojs/tailwind";
 
 export default defineConfig({
   site: "https://arekkmirmun.github.io",
-  base: "/GeneradorExamenesEvauMatematicas",
+  base: "/GeneradorExamenesEvau",
   integrations: [tailwind()],
 });
