@@ -1,4 +1,4 @@
-# PDFs y datos
+# Ejercicios y examenes generados
 examenes_generados/
 
 # Python
@@ -14,6 +14,7 @@ venv/
 build/
 dist/
 *.spec
+*.exe
 
 # IDE
 .vscode/

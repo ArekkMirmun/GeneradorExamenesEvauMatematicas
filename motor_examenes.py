@@ -1,5 +1,5 @@
 """
-Motor de generacion de examenes para CII y CCSS.
+Motor de generacion de examenes para CII, CCSS, FISICA y QUIMICA.
 Modulo compartido entre la app publica y la privada.
 """
 
@@ -34,6 +34,27 @@ CCSS_TEMAS = {
     "distribucion_binomial": "Dist. Binomial",
 }
 
+FISICA_TEMAS = {
+    "campo_gravitatorio": "Campo Gravitatorio",
+    "campo_electrico_magnetico": "Campo Elect./Magnet.",
+    "ondas": "Ondas",
+    "optica_geometrica": "Optica Geometrica",
+    "fisica_cuantica_nuclear": "Fisica Cuant./Nuclear",
+}
+
+QUIMICA_TEMAS = {
+    "acido_base": "Acido-Base",
+    "energia_reacciones": "Energia Reacciones",
+    "enlaces_quimicos": "Enlaces Quimicos",
+    "equilibrio_precipitacion": "Eq. Precipitacion",
+    "equilibrio_quimico": "Equilibrio Quimico",
+    "estructura_atomo": "Estructura Atomo",
+    "formulacion_quimica": "Formulacion Quimica",
+    "quimica_organica": "Quimica Organica",
+    "reacciones_redox": "Reacciones Redox",
+    "transformacion_quimica": "Transf. Quimica",
+}
+
 # Estructura oficial del examen CII (2025)
 CII_UNITS = {
     "analisis": ["funciones", "integrales"],
@@ -52,6 +73,23 @@ CCSS_GROUPS = {
     "estadistica": ["probabilidad", "teoria_muestras", "distribucion_binomial"],
 }
 
+# Estructura oficial del examen FISICA (bloques A-D)
+FISICA_BLOQUES = {
+    "A": ["campo_gravitatorio"],
+    "B": ["campo_electrico_magnetico"],
+    "C": ["ondas", "optica_geometrica"],
+    "D": ["fisica_cuantica_nuclear"],
+}
+
+# Estructura oficial del examen QUIMICA (5 preguntas)
+QUIMICA_PREGUNTAS = {
+    "P1": ["equilibrio_quimico", "equilibrio_precipitacion"],
+    "P2": ["acido_base", "reacciones_redox"],
+    "P3": ["estructura_atomo", "enlaces_quimicos"],
+    "P4": ["formulacion_quimica", "quimica_organica"],
+    "P5": ["energia_reacciones", "transformacion_quimica"],
+}
+
 
 # ---------------------------------------------------------------------------
 # Carga de ejercicios
@@ -61,7 +99,7 @@ def load_exercises(exercises_dir: Path):
     Returns: {"CII": {"funciones": [...], ...}, "CCSS": {"matrices": [...], ...}}
     """
     result = {}
-    for asig in ["CII", "CCSS"]:
+    for asig in ["CII", "CCSS", "FISICA", "QUIMICA"]:
         asig_dir = exercises_dir / asig
         if not asig_dir.is_dir():
             continue
@@ -79,8 +117,13 @@ def load_exercises(exercises_dir: Path):
 def get_available_temas(exercises):
     """Devuelve los temas disponibles con conteo."""
     info = {}
-    for asig in ["CII", "CCSS"]:
-        temas_map = CII_TEMAS if asig == "CII" else CCSS_TEMAS
+    temas_maps = {
+        "CII": CII_TEMAS,
+        "CCSS": CCSS_TEMAS,
+        "FISICA": FISICA_TEMAS,
+        "QUIMICA": QUIMICA_TEMAS,
+    }
+    for asig, temas_map in temas_maps.items():
         if asig not in exercises:
             continue
         info[asig] = {}
@@ -289,6 +332,105 @@ def generate_mixed_both_exam(exercises, temas_cii, temas_ccss, n=6, seed=None):
     return sections, labels
 
 
+def generate_fisica_exam(exercises, temas_activos, seed=None):
+    """Genera un examen de Fisica con estructura de 4 bloques (A-D).
+    Selecciona 1 ejercicio por bloque disponible.
+    """
+    if seed is not None:
+        random.seed(seed)
+
+    used = set()
+    pools = {}
+    for tema in temas_activos:
+        files = exercises.get("FISICA", {}).get(tema, [])
+        if files:
+            pools[tema] = files
+
+    # Componer pools por bloque
+    block_pools = {}
+    for block_name, cats in FISICA_BLOQUES.items():
+        pool = []
+        for cat in cats:
+            if cat in pools:
+                pool.extend(pools[cat])
+        if pool:
+            block_pools[block_name] = pool
+
+    if len(block_pools) < 2:
+        return _generate_mixed(exercises, "FISICA", temas_activos, 4, seed)
+
+    block_labels = {
+        "A": "BLOQUE A - Campo Gravitatorio",
+        "B": "BLOQUE B - Campo Electrico y Magnetico",
+        "C": "BLOQUE C - Ondas / Optica",
+        "D": "BLOQUE D - Fisica Cuantica y Nuclear",
+    }
+
+    sections = {}
+    labels = {}
+    for block_name in sorted(block_pools):
+        avail = [f for f in block_pools[block_name] if f not in used]
+        if not avail:
+            continue
+        ex = random.sample(avail, 1)
+        used.update(ex)
+        key = f"bloque_{block_name}"
+        sections[key] = ex
+        labels[key] = block_labels.get(block_name, f"BLOQUE {block_name}")
+
+    return sections, labels
+
+
+def generate_quimica_exam(exercises, temas_activos, seed=None):
+    """Genera un examen de Quimica con estructura de 5 preguntas.
+    Selecciona 1 ejercicio por pregunta disponible.
+    """
+    if seed is not None:
+        random.seed(seed)
+
+    used = set()
+    pools = {}
+    for tema in temas_activos:
+        files = exercises.get("QUIMICA", {}).get(tema, [])
+        if files:
+            pools[tema] = files
+
+    # Componer pools por pregunta
+    preg_pools = {}
+    for preg_name, cats in QUIMICA_PREGUNTAS.items():
+        pool = []
+        for cat in cats:
+            if cat in pools:
+                pool.extend(pools[cat])
+        if pool:
+            preg_pools[preg_name] = pool
+
+    if len(preg_pools) < 2:
+        return _generate_mixed(exercises, "QUIMICA", temas_activos, 5, seed)
+
+    preg_labels = {
+        "P1": "PREGUNTA 1 - Equilibrio Quimico",
+        "P2": "PREGUNTA 2 - Acido-Base / Redox",
+        "P3": "PREGUNTA 3 - Estructura Atomica / Enlaces",
+        "P4": "PREGUNTA 4 - Formulacion / Quimica Organica",
+        "P5": "PREGUNTA 5 - Energia / Transf. Quimica",
+    }
+
+    sections = {}
+    labels = {}
+    for preg_name in sorted(preg_pools):
+        avail = [f for f in preg_pools[preg_name] if f not in used]
+        if not avail:
+            continue
+        ex = random.sample(avail, 1)
+        used.update(ex)
+        key = f"pregunta_{preg_name}"
+        sections[key] = ex
+        labels[key] = preg_labels.get(preg_name, preg_name)
+
+    return sections, labels
+
+
 def get_next_exam_id(output_dir):
     """Devuelve el siguiente ID de examen basado en los existentes."""
     out = Path(output_dir)
@@ -326,6 +468,8 @@ def build_exam_pdf(sections, labels, exam_id, output_dir, asig_tag, solved=False
         "CII": "MATEMATICAS II",
         "CCSS": "MATEMATICAS CCSS",
         "CII_y_CCSS": "MATEMATICAS II + CCSS",
+        "FISICA": "FISICA",
+        "QUIMICA": "QUIMICA",
     }.get(asig_tag, asig_tag)
 
     # --- Cover page ---
