@@ -194,6 +194,7 @@ def find_all_exercise_markers(doc, year):
                     m_op = re.match(r"^OPCI[ÓO]N\s+([AB])$", text, re.IGNORECASE)
                     if m_op:
                         current_opcion = m_op.group(1).upper()
+                        all_markers.append((f"_OPCION_{current_opcion}", page_idx, y_top, None))
                         continue
                     m_ej = re.match(r"^(\d+)\.\s", text)
                     if m_ej and current_opcion:
@@ -209,6 +210,11 @@ def find_all_exercise_markers(doc, year):
                             all_markers.append((str(ex_num), page_idx, y_top, None))
 
                 elif year <= 2024:
+                    # Detectar cabeceras de bloque como limite de seccion
+                    m_block = re.match(r"^([A-D])\)\s", text)
+                    if m_block:
+                        all_markers.append((f"_BLOCK_{m_block.group(1).upper()}", page_idx, y_top, None))
+                        continue
                     # Soporta "A.1." (2021), "A1." (2024), "D.1 ." y "A2 ."
                     m_ej = re.match(r"^([A-D])\.?\s*(\d)\s*\.\s", text)
                     if m_ej:
@@ -309,11 +315,20 @@ def process_exam(exam_path, year, periodo, cat_ref, output_dir, stats):
         return
 
     for i, (ex_id, start_page, y_start, opcion) in enumerate(all_markers):
+        # Saltar marcadores de limite de seccion
+        if ex_id.startswith("_"):
+            continue
+
         # Determinar final del ejercicio
         if i + 1 < len(all_markers):
-            _, next_page, next_y, _ = all_markers[i + 1]
-            end_page = next_page
-            y_end = next_y - 3
+            next_id, next_page, next_y, _ = all_markers[i + 1]
+            if next_id.startswith("_") and next_page != start_page:
+                # Limite de seccion en otra pagina: recortar en el final de la actual
+                end_page = start_page
+                y_end = doc[start_page].rect.height
+            else:
+                end_page = next_page
+                y_end = next_y - 3
         else:
             end_page = start_page
             y_end = doc[start_page].rect.height

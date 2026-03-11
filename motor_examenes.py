@@ -382,8 +382,9 @@ def generate_fisica_exam(exercises, temas_activos, seed=None):
 
 
 def generate_quimica_exam(exercises, temas_activos, seed=None):
-    """Genera un examen de Quimica con estructura de 5 preguntas.
-    Selecciona 1 ejercicio por pregunta disponible.
+    """Genera un examen de Quimica con estructura oficial 2025.
+    - PREGUNTA 1-4: 2 ejercicios (opciones A/B, alumno elige una)
+    - PREGUNTA 5: 1 ejercicio obligatorio
     """
     if seed is not None:
         random.seed(seed)
@@ -409,11 +410,11 @@ def generate_quimica_exam(exercises, temas_activos, seed=None):
         return _generate_mixed(exercises, "QUIMICA", temas_activos, 5, seed)
 
     preg_labels = {
-        "P1": "PREGUNTA 1 - Equilibrio Quimico",
-        "P2": "PREGUNTA 2 - Acido-Base / Redox",
-        "P3": "PREGUNTA 3 - Estructura Atomica / Enlaces",
-        "P4": "PREGUNTA 4 - Formulacion / Quimica Organica",
-        "P5": "PREGUNTA 5 - Energia / Transf. Quimica",
+        "P1": "PREGUNTA 1 (2 puntos) - Elige UNA opcion",
+        "P2": "PREGUNTA 2 (2 puntos) - Elige UNA opcion",
+        "P3": "PREGUNTA 3 (2 puntos) - Elige UNA opcion",
+        "P4": "PREGUNTA 4 (1,5 puntos) - Elige UNA opcion",
+        "P5": "PREGUNTA 5 (2,5 puntos) - Obligatoria",
     }
 
     sections = {}
@@ -422,10 +423,18 @@ def generate_quimica_exam(exercises, temas_activos, seed=None):
         avail = [f for f in preg_pools[preg_name] if f not in used]
         if not avail:
             continue
-        ex = random.sample(avail, 1)
-        used.update(ex)
+
+        if preg_name != "P5":
+            # P1-P4: 2 ejercicios (opciones A y B)
+            n = min(2, len(avail))
+            selected = random.sample(avail, n)
+        else:
+            # P5: 1 ejercicio obligatorio
+            selected = random.sample(avail, 1)
+
+        used.update(selected)
         key = f"pregunta_{preg_name}"
-        sections[key] = ex
+        sections[key] = selected
         labels[key] = preg_labels.get(preg_name, preg_name)
 
     return sections, labels
